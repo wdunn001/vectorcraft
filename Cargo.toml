@@ -151,11 +151,3 @@ hayro-jbig2 = { git = "https://github.com/storytold/craft-libs", rev = "ca50d63b
 krilla = {git = "https://github.com/wdunn001/craft-libs", branch = "quasarke"}
 
 
-[patch."https://github.com/wdunn001/craft-libs"]
-craft-ui = { path = "../gh-craft-libs/crates/ui" }
-craft-cloud = { path = "../gh-craft-libs/crates/cloud" }
-
-
-[patch."https://github.com/wdunn001/craft-libs"]
-craft-ui = { path = "../gh-craft-libs/crates/ui" }
-craft-cloud = { path = "../gh-craft-libs/crates/cloud" }
