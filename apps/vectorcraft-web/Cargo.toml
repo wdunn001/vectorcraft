@@ -14,10 +14,12 @@ name = "vectorcraft-web"
 path = "src/main.rs"
 
 [dependencies]
-vectorcraft-engine = { workspace = true, features = ["bundled-fonts"] }
+vectorcraft-engine = { workspace = true, features = ["bundled-fonts", "heif"] }
 vectorcraft-ui-egui = { workspace = true }
 craft-cloud-client = {git = "https://github.com/wdunn001/collab-craft", branch = "quasarke"}
 collabcraft-share = {git = "https://github.com/wdunn001/collab-craft", branch = "quasarke"}
+# The page command API (storytold/craft-libs#413): the request plumbing behind window.vectorcraft.
+craft-web-api = {git = "https://github.com/wdunn001/craft-libs", branch = "quasarke", version = "0.1.0"}
 vectorcraft-format = { workspace = true }
 vectorcraft-text = { workspace = true }
 egui = { workspace = true }
@@ -26,9 +28,9 @@ log = { workspace = true }
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 # `wgpu` pulls egui-wgpu's defaults: WebGPU plus the WebGL2 fallback.
 eframe = { workspace = true, features = ["default_fonts", "wgpu", "accesskit"] }
-rfd = { workspace = true }
+rfd = { workspace = true, features = ["file-handle-inner"] }
 wasm-bindgen = "0.2"
 serde_json = { workspace = true }
 wasm-bindgen-futures = "0.4"
 js-sys = "0.3"
-web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlIFrameElement", "HtmlAnchorElement", "Blob", "BlobPropertyBag", "ClipboardEvent", "DataTransfer", "File", "FileList", "Url", "Location", "CssStyleDeclaration", "Event", "EventTarget", "MouseEvent", "PointerEvent", "TouchEvent", "AddEventListenerOptions", "DomRect", "DragEvent", "Storage", "Navigator", "Request", "RequestInit", "RequestCredentials", "Response", "AbortController", "AbortSignal"] }
+web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlInputElement", "KeyboardEvent", "HtmlIFrameElement", "HtmlAnchorElement", "Blob", "BlobPropertyBag", "ClipboardEvent", "DataTransfer", "File", "FileList", "Url", "Location", "CssStyleDeclaration", "Event", "EventTarget", "MouseEvent", "PointerEvent", "TouchEvent", "AddEventListenerOptions", "DomRect", "DragEvent", "Storage", "Navigator", "Request", "RequestInit", "RequestCredentials", "Response", "AbortController", "AbortSignal"] }

@@ -4,7 +4,7 @@ members = ["crates/*", "apps/*", "xtask"]
 default-members = ["crates/*", "apps/vectorcraft", "apps/vectorcraft-cli", "xtask"]
 
 [workspace.package]
-version = "0.16.0"
+version = "0.24.1"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 rust-version = "1.95"
@@ -27,9 +27,17 @@ craft-cloud-client = {git = "https://github.com/wdunn001/collab-craft", branch =
 # The share dialog's backend. craft-ui draws the dialog and opens no socket; this is the half that
 # reaches the service, so it lives beside the client rather than in craft-libs.
 collabcraft-share = {git = "https://github.com/wdunn001/collab-craft", branch = "quasarke"}
+craft-keymap = {git = "https://github.com/wdunn001/craft-libs", branch = "quasarke"}
+craft-proof = {git = "https://github.com/wdunn001/craft-libs", branch = "quasarke"}
 # Decides who draws the window frame (desktop vs. app) so the suite shares one native titlebar per
 # desktop. The `egui` feature adds `craft_window::decorate`. (craft-libs#217.)
 craft-window = {git = "https://github.com/wdunn001/craft-libs", branch = "quasarke", features = ["egui"]}
+# The `.vectorcraft` envelope: its members, version, embedded images and the data after the JSON.
+craft-vectorcraft-format = {git = "https://github.com/wdunn001/craft-libs", branch = "quasarke"}
+# craft-update: app-specific pretend versions apply to startup and manual checks.
+# Native Affinity documents (craft-libs#914).
+craft-affinity = {git = "https://github.com/wdunn001/craft-libs", branch = "quasarke"}
+craft-update = {git = "https://github.com/wdunn001/craft-libs", branch = "quasarke", version = "=0.1.0", features = ["egui"]}
 # internal
 vectorcraft-geom = { path = "crates/geom" }
 vectorcraft-color = { path = "crates/color" }
@@ -60,6 +68,8 @@ vectorcraft-metafile = { path = "crates/metafile" }
 vectorcraft-plugins = { path = "crates/plugins" }
 vectorcraft-affinity = { path = "crates/affinity" }
 vectorcraft-scriptcheck = { path = "crates/scriptcheck" }
+vectorcraft-js = { path = "crates/js" }
+vectorcraft-apischema = { path = "crates/apischema" }
 
 # foundation
 kurbo = { version = "0.13", features = ["serde"] }
@@ -103,18 +113,33 @@ ruzstd = { version = "0.9.1", default-features = false, features = ["std"] }
 # CCITT Group 3 and Group 4 decoder (ITU-T T.4 and T.6): EPS images read through
 # `CCITTFaxDecode`. The PDF reader's hayro-syntax uses the same version.
 hayro-ccitt = "0.3"
+# Substring search for the EPS reader's PostScript `search`.
+memchr = "2"
+# The WHATWG Encoding Standard's legacy encodings: names in legacy .ai files read in the code page
+# the user picks (Mac OS Roman, Korean, Japanese, Chinese).
+encoding_rs = "0.8.42"
 jpeg-encoder = { version = "0.6", default-features = false, features = ["std"] }
 gif = { version = "0.14", default-features = false, features = ["std", "raii_no_panic"] }
 # CMYK image samples (vectorcraft-doc's cmyk module): the image crate's own TIFF and JPEG
 # decoders, read directly (the image crate converts CMYK to RGB).
 tiff = "0.11"
 zune-jpeg = "0.5"
+# JPEG XL decoder (pure Rust, MIT OR Apache-2.0): File › Open and Place read `.jxl` images. It is
+# built without its default `rayon` feature and decodes on one thread.
+jxl-oxide = { version = "0.12.6", default-features = false }
+# jxl-oxide's color conversions, run on colors after their alpha is divided out.
+jxl-color = "0.11.0"
+# jxl-oxide's buffer allocation error, told apart from other decoding errors.
+jxl-grid = "0.6.2"
+# Tests: a lossless JPEG XL encoder (pure Rust, MIT OR Apache-2.0 OR Zlib) for the `.jxl` test files.
+zune-jpegxl = { version = "0.5.2", default-features = false, features = ["std"] }
+zune-core = "0.5"
 
 # ui
-egui = "0.36"
-egui_extras = { version = "0.36", default-features = false, features = ["svg"] }
-eframe = { version = "0.36", default-features = false }
-egui_kittest = "0.36"
+egui = "0.37"
+egui_extras = { version = "0.37", default-features = false, features = ["svg"] }
+eframe = { version = "0.37", default-features = false }
+egui_kittest = "0.37"
 rfd = "0.17"
 arboard = { version = "3.6", default-features = false }
 clipboard-win = "5.4"
@@ -124,6 +149,9 @@ webbrowser = "1"
 unsafe_code = "deny"
 
 [workspace.lints.clippy]
+cognitive_complexity = "deny"
+too_many_arguments = "deny"
+wildcard_imports = "deny"
 dbg_macro = "warn"
 # VectorCraft never crashes: shipped code returns `Result`/`Option` instead of panicking (see
 # AGENTS.md › Robustness). Tests may unwrap (clippy.toml).
@@ -134,11 +162,15 @@ todo = "deny"
 unimplemented = "deny"
 unreachable = "deny"
 
+# Workspace crates keep line tables, so panics and backtraces name file and line; dependencies
+# carry no debug info. Full debug info would make the dev target dir several times larger.
 [profile.dev.package."*"]
 opt-level = 2
+debug = false
 
 [profile.dev]
 opt-level = 1
+debug = "line-tables-only"
 
 [profile.release]
 lto = "thin"
@@ -146,8 +178,25 @@ codegen-units = 1
 
 [patch.crates-io]
 hayro-syntax = {git = "https://github.com/wdunn001/craft-libs", branch = "quasarke"}
-hayro-interpret = { git = "https://github.com/storytold/craft-libs", rev = "ca50d63b773c99f96e75c77ce5a1d21e7c9cda0d" }
-hayro-jbig2 = { git = "https://github.com/storytold/craft-libs", rev = "ca50d63b773c99f96e75c77ce5a1d21e7c9cda0d" }
+hayro-interpret = {git = "https://github.com/wdunn001/craft-libs", branch = "quasarke"}
+hayro-jbig2 = {git = "https://github.com/wdunn001/craft-libs", branch = "quasarke"}
+hayro-cmap = {git = "https://github.com/wdunn001/craft-libs", branch = "quasarke"}
+hayro-postscript = {git = "https://github.com/wdunn001/craft-libs", branch = "quasarke"}
 krilla = {git = "https://github.com/wdunn001/craft-libs", branch = "quasarke"}
-
-
+linesweeper = {git = "https://github.com/wdunn001/craft-libs", branch = "quasarke"}
+ecolor = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
+emath = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
+epaint = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
+epaint_default_fonts = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
+egui = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
+egui-winit = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
+egui-wgpu = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
+egui_glow = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
+egui_extras = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
+egui_kittest = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
+egui_system_font_provider = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
+eframe = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
+egui_demo_lib = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
+egui_inspection = { git = "https://github.com/storytold/egui.git", rev = "6d518fc799681571963842f95b55a6b68431b15a" }
+winit = { git = "https://github.com/storytold/winit.git", rev = "a517b3846ee8457d84ee4975110bfda6797c44dc" }
+>>>>>>> upstream/main
