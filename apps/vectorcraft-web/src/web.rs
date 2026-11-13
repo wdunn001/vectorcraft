@@ -11,6 +11,7 @@ use vectorcraft_engine::cmd::fileio;
 use vectorcraft_engine::cmd::recovery::{self, Hold, RecoveryStore};
 use vectorcraft_engine::cmd::scripts::RUN_EXTS;
 use vectorcraft_engine::script::MAX_SOURCE_BYTES;
+use vectorcraft_ui_egui::cloud;
 use vectorcraft_ui_egui::dialogs::script_run::ScriptInbox;
 use vectorcraft_ui_egui::graphics::GraphicsLoss;
 use vectorcraft_ui_egui::i18n;

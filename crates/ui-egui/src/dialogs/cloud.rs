@@ -111,7 +111,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut Ui, d: &mut Dialog) -> bool {
 fn place_row(ui: &mut Ui, icon: &str, name: &str, detail: &str) -> egui::Response {
     let t = Tokens::get(ui.ctx());
     let (rect, resp) = ui.allocate_exact_size(vec2(ui.available_width(), 48.0), egui::Sense::click());
-    resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, name));
+    resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, name));
     if resp.hovered() {
         ui.painter().rect_filled(rect, t.cr(), t.hover);
     }
